@@ -1,6 +1,8 @@
+"use server"
 
-export default function Home() {
-  return (
-    <div>Learnibg auth usig next js </div>
-  );
+import { redirect } from "next/navigation";
+
+export default  async function SigIn() {
+  redirect('/sigin'); 
+  return null; 
 }
