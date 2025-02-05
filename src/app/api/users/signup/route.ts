@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const reqBody = await request.json();
     const { username, email, password } = reqBody;
 
+    // Check if the user already exists
     const ifExists = await User_data.findOne({ email });
     if (ifExists) {
       return NextResponse.json(
@@ -19,15 +20,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Basic password validation (you can expand this)
+    if (password.length < 8) {
+      return NextResponse.json(
+        { msg: "Password must be at least 8 characters long." },
+        { status: 400 }
+      );
+    }
+
     const saltRounds = parseInt(process.env.SALT_ROUNDS || "12");
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // Create a new user in the database
     const savedUser = await User_data.create({
       username,
       email,
       password: hashedPassword,
     });
 
+    // Send a verification email
     await SendEmail({ email, emailType: "VERIFY", userId: savedUser._id });
 
     return NextResponse.json(
@@ -39,6 +50,8 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Error during registration:", error); // Log error for debugging
+
     return NextResponse.json(
       { error: `Something went wrong: ${error.message}` },
       { status: 500 }
